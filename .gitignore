@@ -1,5 +1,6 @@
 node_modules/
 dist/
+bundle.js
 *-lock.json
 *-lock.yaml
 *.lock

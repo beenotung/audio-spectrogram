@@ -14,7 +14,7 @@
   "scripts": {
     "test": "tsc --noEmit",
     "clean": "rimraf dist",
-    "build": "esbuild --bundle src/app.ts --outfile=dist/bundle.js",
+    "build": "esbuild --bundle src/app.ts --outfile=bundle.js",
     "tsc": "tsc -p .",
     "dev": "npm run build -- --watch"
   },
