@@ -12,6 +12,33 @@ Interactive tool for turning audio files into spectrogram visualisations in the 
 - Switch between precision profiles to tune performance vs. detail
 - Adjust the maximum frequency shown in the chart
 
+## TypeScript API
+
+```typescript
+import {
+  AudioProfileMode,
+  DrawProgress,
+  decodeAudio,
+  drawSpectrogram,
+  getAudioProfile,
+  getMonoAudioData,
+  getNow,
+  getSpectrogramData,
+  loadFile,
+  loadUrl,
+} from 'audio-spectrogram'
+```
+
+- `loadFile(file: File)` → `Promise<ArrayBuffer>`: read a user-selected file.
+- `loadUrl(url: string)` → `Promise<ArrayBuffer>`: fetch audio data remotely with error handling.
+- `decodeAudio(buffer: ArrayBuffer, sampleRate?: number)` → `Promise<AudioBuffer>`: decode PCM data using the Web Audio API.
+- `getMonoAudioData(audio: AudioBuffer)` → `Float32Array`: downmix multi-channel audio to mono.
+- `getSpectrogramData(audio: Float32Array, windowSize: number)` → `number[][]`: compute log-scaled magnitudes for each FFT window.
+- `drawSpectrogram(options)` → `Promise<void>`: render grayscale pixels onto a canvas while reporting optional `onProgress` callbacks.
+- `getAudioProfile(mode: AudioProfileMode)` → profile settings (`sampleRate`, `windowSize`, `hopSize`, `maxFrequency`).
+- `AudioProfileMode`: union of `'high-precision' | 'medium-precision' | 'low-precision'`.
+- `DrawProgress`: `{ percent: number; etaMs: number | null }`.
+
 ## Development
 
 ```bash
