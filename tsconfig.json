@@ -6,7 +6,7 @@
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "skipLibCheck": true,
-    "incremental": true,
+    "incremental": false,
     "declaration": true,
     "outDir": "dist"
   },

@@ -10,17 +10,18 @@
     "url": "https://beeno-tung.surge.sh"
   },
   "license": "BSD-2-Clause",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/core.js",
+  "types": "dist/core.d.ts",
   "files": [
     "dist"
   ],
   "scripts": {
     "test": "tsc --noEmit",
     "clean": "rimraf dist",
-    "build": "esbuild --bundle src/app.ts --outfile=bundle.js",
-    "tsc": "tsc -p .",
-    "dev": "npm run build -- --watch"
+    "build": "npm run clean && npm run tsc && npm run bundle",
+    "bundle": "esbuild --bundle src/app.ts --outfile=bundle.js",
+    "tsc": "tsc -p . && rimraf dist/app.* dist/tsconfig.tsbuildinfo",
+    "dev": "npm run bundle -- --watch"
   },
   "devDependencies": {
     "@types/node": "^24.9.2",
