@@ -2,8 +2,15 @@
   "name": "audio-spectrogram.ts",
   "version": "0.0.0",
   "type": "commonjs",
-  "description": "",
-  "keywords": [],
+  "description": "Interactive tool for turning audio files into spectrogram visualisations in the browser.",
+  "keywords": [
+    "audio",
+    "spectrogram",
+    "visualization",
+    "browser",
+    "web",
+    "tool"
+  ],
   "author": {
     "name": "Beeno Tung",
     "email": "aabbcc1241@yahoo.com.hk",
