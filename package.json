@@ -1,5 +1,5 @@
 {
-  "name": "audio-spectrogram",
+  "name": "audio-spectrogram.ts",
   "version": "0.0.0",
   "type": "commonjs",
   "description": "",
@@ -23,6 +23,9 @@
     "tsc": "tsc -p . && rimraf dist/app.* dist/tsconfig.tsbuildinfo",
     "dev": "npm run bundle -- --watch"
   },
+  "dependencies": {
+    "@tensorflow/tfjs": "^4.22.0"
+  },
   "devDependencies": {
     "@types/node": "^24.9.2",
     "esbuild": "^0.25.12",
@@ -36,8 +39,5 @@
       "core-js",
       "esbuild"
     ]
-  },
-  "dependencies": {
-    "@tensorflow/tfjs": "^4.22.0"
   }
 }
