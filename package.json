@@ -14,15 +14,21 @@
   "scripts": {
     "test": "tsc --noEmit",
     "clean": "rimraf dist",
-    "build": "rimraf dist && tsc -p . && rimraf dist/tsconfig.tsbuildinfo dist/*.test.d.ts dist/*.test.js dist/*.spec.d.ts dist/*.spec.js",
+    "build": "esbuild --bundle src/app.ts --outfile=dist/bundle.js",
     "tsc": "tsc -p .",
-    "dev": "tsc -p . --watch"
+    "dev": "npm run build -- --watch"
   },
   "devDependencies": {
     "@types/node": "^24.9.2",
+    "esbuild": "^0.25.12",
     "rimraf": "^6.1.0",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.9.3"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
   }
 }
