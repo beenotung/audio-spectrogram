@@ -1,14 +1,59 @@
 import * as tf from '@tensorflow/tfjs'
 
 type AudioProfileMode = 'high-precision' | 'medium-precision' | 'low-precision'
+type DrawProgress = {
+  percent: number
+  etaMs: number | null
+}
 
 let statusNode = querySelector('#status')
 let input = querySelector<HTMLInputElement>('#fileInput')
 let profileSelect = querySelector<HTMLSelectElement>('#profileSelect')
 let canvas = querySelector<HTMLCanvasElement>('#canvas')
+let statsNode = querySelector('#stats')
+let maxFrequencyInput = querySelector<HTMLInputElement>('#maxFrequencyInput')
 
 let setStatus = (message: string) => {
   statusNode.textContent = message
+}
+
+let setStats = (html: string) => {
+  statsNode.innerHTML = html
+}
+
+let applyProfileDefaults = () => {
+  let mode = profileSelect.value as AudioProfileMode
+  let profile = getAudioProfile(mode)
+  maxFrequencyInput.value = String(profile.maxFrequency)
+}
+
+let renderStats = (inputs: Record<string, string | number>) => {
+  setStats(
+    Object.entries(inputs)
+      .map(([key, value]) => `<pre>${key}: ${value}</pre>`)
+      .join(''),
+  )
+}
+
+let describeProgress = (progress: DrawProgress) => {
+  let etaText = formatEta(progress.etaMs)
+  return `Drawing spectrogram ${progress.percent}% (${etaText})`
+}
+
+let getNow = () => performance.now()
+
+function formatEta(etaMs: number | null) {
+  if (etaMs == null || !isFinite(etaMs) || etaMs < 0) {
+    return 'ETA --'
+  }
+  let seconds = etaMs / 1000
+  if (seconds >= 60) {
+    let minutes = Math.floor(seconds / 60)
+    let remainingSeconds = Math.round(seconds - minutes * 60)
+    return `ETA ${minutes}m ${remainingSeconds}s`
+  }
+  let roundedSeconds = Math.max(0, Math.round(seconds * 10) / 10)
+  return `ETA ${roundedSeconds}s`
 }
 
 export async function loadFile(file: File) {
@@ -93,7 +138,7 @@ export async function drawSpectrogram(inputs: {
   hopSize: number
   maxFrequency: number
   canvas: HTMLCanvasElement
-  onProgress?: (percent: number) => void
+  onProgress?: (progress: DrawProgress) => void
 }) {
   let {
     signal,
@@ -134,6 +179,7 @@ export async function drawSpectrogram(inputs: {
   let hammingWindow = tf.signal.hammingWindow(windowSize)
   let timer = setInterval(draw)
   let lastPercent = -1
+  let startTime = getNow()
   for (let x = 0; x < frameCount && !signal.aborted; x++) {
     let frame = Math.floor((x / canvas.width) * frameCount)
     let start = frame * hopSize
@@ -171,14 +217,18 @@ export async function drawSpectrogram(inputs: {
       let percent = Math.floor(((x + 1) / frameCount) * 100)
       if (percent !== lastPercent) {
         lastPercent = percent
-        onProgress(percent)
+        let progress = (x + 1) / frameCount
+        let elapsedMs = getNow() - startTime
+        let speed = progress / elapsedMs
+        let etaMs = (1 - progress) / speed
+        onProgress({ percent, etaMs })
       }
     }
   }
   clearInterval(timer)
 
   if (onProgress && !signal.aborted) {
-    onProgress(100)
+    onProgress({ percent: 100, etaMs: 0 })
   }
 
   function draw() {
@@ -207,13 +257,36 @@ export async function main(signal: AbortSignal) {
   let file = input.files?.[0]
   if (!file) {
     setStatus('Select an audio file to render')
+    setStats('')
     return
   }
 
   setStatus('Loading file...')
   let mode = profileSelect.value as AudioProfileMode
   let profile = getAudioProfile(mode)
-  let { sampleRate, windowSize, hopSize, maxFrequency } = profile
+  let {
+    sampleRate,
+    windowSize,
+    hopSize,
+    maxFrequency: defaultMaxFrequency,
+  } = profile
+  let maxFrequency = (() => {
+    let raw = maxFrequencyInput.value.trim()
+    if (!raw) {
+      return defaultMaxFrequency
+    }
+    let parsed = Number(raw)
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      throw new Error('Max frequency must be a positive number')
+    }
+    return Math.floor(parsed)
+  })()
+  let maxAllowedFrequency = Math.floor(windowSize / 2)
+  if (maxFrequency > maxAllowedFrequency) {
+    throw new Error(
+      `Max frequency (${maxFrequency}) must be <= ${maxAllowedFrequency} for windowSize ${windowSize}`,
+    )
+  }
 
   console.log('file size:', file.size.toLocaleString())
 
@@ -232,7 +305,18 @@ export async function main(signal: AbortSignal) {
   console.time('getMonoAudioData')
   let audioData = getMonoAudioData(audioBuffer)
   console.timeEnd('getMonoAudioData')
-  setStatus('Drawing spectrogram 0%')
+  setStatus(describeProgress({ percent: 0, etaMs: null }))
+  let frameCount = Math.floor((audioData.length - windowSize) / hopSize) + 1
+  renderStats({
+    filename: file.name,
+    file_size: file.size,
+    duration: audioBuffer.duration.toFixed(2) + 's',
+    sample_rate: sampleRate + ' Hz',
+    window_size: windowSize,
+    hop_size: hopSize,
+    max_frequency: maxFrequency + ' Hz',
+    frame_count: frameCount,
+  })
 
   console.time('drawSpectrogram')
   await drawSpectrogram({
@@ -242,8 +326,8 @@ export async function main(signal: AbortSignal) {
     hopSize,
     maxFrequency,
     canvas,
-    onProgress: percent => {
-      setStatus(`Drawing spectrogram ${percent}%`)
+    onProgress: progress => {
+      setStatus(describeProgress(progress))
     },
   })
   console.timeEnd('drawSpectrogram')
@@ -284,9 +368,15 @@ function getAudioProfile(mode: AudioProfileMode) {
 }
 
 setStatus('Ready')
+setStats('')
+applyProfileDefaults()
 
 input.onchange = run
-profileSelect.onchange = run
+profileSelect.onchange = () => {
+  applyProfileDefaults()
+  run()
+}
+maxFrequencyInput.onchange = run
 run()
 
 function querySelector<E extends HTMLElement>(selector: string) {

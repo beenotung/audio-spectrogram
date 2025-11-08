@@ -9,10 +9,17 @@
         width: 100%;
         outline: 1px solid red;
       }
+      .field {
+        margin: 0.5rem 0;
+      }
+      pre {
+        font-family: monospace, monospace;
+        margin: 0.5rem 0;
+      }
     </style>
   </head>
   <body>
-    <div>
+    <div class="field">
       <label for="profileSelect">Audio profile:</label>
       <select id="profileSelect">
         <option value="high-precision">High precision</option>
@@ -20,10 +27,15 @@
         <option value="low-precision" selected>Low precision</option>
       </select>
     </div>
-    <div>
+    <div class="field">
+      <label for="maxFrequencyInput">Max frequency:</label>
+      <input type="number" id="maxFrequencyInput" min="1" />
+    </div>
+    <div class="field">
       <label for="fileInput">Audio file:</label>
       <input type="file" id="fileInput" />
     </div>
+    <div id="stats"></div>
     <p id="status">Loading script...</p>
     <canvas id="canvas"></canvas>
     <script src="dist/bundle.js"></script>
