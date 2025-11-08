@@ -1,8 +1,8 @@
-# audio-spectrogram
+# audio-spectrogram.ts
 
 Interactive tool for turning audio files into spectrogram visualisations in the browser.
 
-[![npm Package Version](https://img.shields.io/npm/v/audio-spectrogram)](https://www.npmjs.com/package/audio-spectrogram)
+[![npm Package Version](https://img.shields.io/npm/v/audio-spectrogram.ts)](https://www.npmjs.com/package/audio-spectrogram.ts)
 
 [Live demo](https://audio-spectrogram.surge.sh)
 
