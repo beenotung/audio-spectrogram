@@ -1,8 +1,15 @@
 import * as tf from '@tensorflow/tfjs'
 
+type AudioProfileMode = 'high-precision' | 'medium-precision' | 'low-precision'
+
 let statusNode = querySelector('#status')
 let input = querySelector<HTMLInputElement>('#fileInput')
+let profileSelect = querySelector<HTMLSelectElement>('#profileSelect')
 let canvas = querySelector<HTMLCanvasElement>('#canvas')
+
+let setStatus = (message: string) => {
+  statusNode.textContent = message
+}
 
 export async function loadFile(file: File) {
   let arrayBuffer = await file.arrayBuffer()
@@ -86,8 +93,17 @@ export async function drawSpectrogram(inputs: {
   hopSize: number
   maxFrequency: number
   canvas: HTMLCanvasElement
+  onProgress?: (percent: number) => void
 }) {
-  let { signal, audioData, windowSize, hopSize, maxFrequency, canvas } = inputs
+  let {
+    signal,
+    audioData,
+    windowSize,
+    hopSize,
+    maxFrequency,
+    canvas,
+    onProgress,
+  } = inputs
 
   let frameCount = Math.floor((audioData.length - windowSize) / hopSize) + 1
   let frequencyBinCount = windowSize / 2
@@ -117,6 +133,7 @@ export async function drawSpectrogram(inputs: {
 
   let hammingWindow = tf.signal.hammingWindow(windowSize)
   let timer = setInterval(draw)
+  let lastPercent = -1
   for (let x = 0; x < frameCount && !signal.aborted; x++) {
     let frame = Math.floor((x / canvas.width) * frameCount)
     let start = frame * hopSize
@@ -150,8 +167,19 @@ export async function drawSpectrogram(inputs: {
       imageData.data[index + 2] = color
       imageData.data[index + 3] = 255
     }
+    if (onProgress) {
+      let percent = Math.floor(((x + 1) / frameCount) * 100)
+      if (percent !== lastPercent) {
+        lastPercent = percent
+        onProgress(percent)
+      }
+    }
   }
   clearInterval(timer)
+
+  if (onProgress && !signal.aborted) {
+    onProgress(100)
+  }
 
   function draw() {
     context.putImageData(imageData, 0, 0)
@@ -171,14 +199,20 @@ export async function run() {
   } catch (error) {
     console.error(error)
     alert(String(error))
+    setStatus('Failed to render spectrogram')
   }
 }
 
 export async function main(signal: AbortSignal) {
   let file = input.files?.[0]
-  if (!file) return
+  if (!file) {
+    setStatus('Select an audio file to render')
+    return
+  }
 
-  let profile = getAudioProfile('low-precision')
+  setStatus('Loading file...')
+  let mode = profileSelect.value as AudioProfileMode
+  let profile = getAudioProfile(mode)
   let { sampleRate, windowSize, hopSize, maxFrequency } = profile
 
   console.log('file size:', file.size.toLocaleString())
@@ -186,16 +220,19 @@ export async function main(signal: AbortSignal) {
   console.time('loadFile')
   let arrayBuffer = await loadFile(file)
   console.timeEnd('loadFile')
+  setStatus('Decoding audio...')
 
   console.time('decodeAudio')
   let audioBuffer = await decodeAudio(arrayBuffer, sampleRate)
   console.timeEnd('decodeAudio')
+  setStatus('Preparing audio data...')
 
   console.log('audio duration:', audioBuffer.duration)
 
   console.time('getMonoAudioData')
   let audioData = getMonoAudioData(audioBuffer)
   console.timeEnd('getMonoAudioData')
+  setStatus('Drawing spectrogram 0%')
 
   console.time('drawSpectrogram')
   await drawSpectrogram({
@@ -205,15 +242,19 @@ export async function main(signal: AbortSignal) {
     hopSize,
     maxFrequency,
     canvas,
+    onProgress: percent => {
+      setStatus(`Drawing spectrogram ${percent}%`)
+    },
   })
   console.timeEnd('drawSpectrogram')
 
   console.log('spectrogram size:', canvas.width + 'x' + canvas.height)
+  if (!signal.aborted) {
+    setStatus('Spectrogram ready')
+  }
 }
 
-function getAudioProfile(
-  mode: 'high-precision' | 'medium-precision' | 'low-precision',
-) {
+function getAudioProfile(mode: AudioProfileMode) {
   let k = 1000
   if (mode === 'high-precision') {
     return {
@@ -242,9 +283,10 @@ function getAudioProfile(
   throw new Error(`Unsupported mode: ${mode}`)
 }
 
-statusNode.textContent = 'Ready'
+setStatus('Ready')
 
 input.onchange = run
+profileSelect.onchange = run
 run()
 
 function querySelector<E extends HTMLElement>(selector: string) {

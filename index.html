@@ -12,10 +12,19 @@
     </style>
   </head>
   <body>
-    <p id="status">Loading script...</p>
     <div>
+      <label for="profileSelect">Audio profile:</label>
+      <select id="profileSelect">
+        <option value="high-precision">High precision</option>
+        <option value="medium-precision">Medium precision</option>
+        <option value="low-precision" selected>Low precision</option>
+      </select>
+    </div>
+    <div>
+      <label for="fileInput">Audio file:</label>
       <input type="file" id="fileInput" />
     </div>
+    <p id="status">Loading script...</p>
     <canvas id="canvas"></canvas>
     <script src="dist/bundle.js"></script>
   </body>
