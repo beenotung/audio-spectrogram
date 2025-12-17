@@ -37,6 +37,7 @@
     "@types/node": "^24.9.2",
     "esbuild": "^0.25.12",
     "rimraf": "^6.1.0",
+    "surge": "^0.24.6",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.9.3"
