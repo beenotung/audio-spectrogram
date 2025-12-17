@@ -26,7 +26,7 @@
     "test": "tsc --noEmit",
     "clean": "rimraf dist",
     "build": "npm run clean && npm run tsc && npm run bundle",
-    "bundle": "esbuild --bundle src/app.ts --outfile=bundle.js",
+    "bundle": "esbuild --bundle src/app.ts --outfile=web/bundle.js",
     "tsc": "tsc -p . && rimraf dist/app.* dist/tsconfig.tsbuildinfo",
     "dev": "npm run bundle -- --watch"
   },
