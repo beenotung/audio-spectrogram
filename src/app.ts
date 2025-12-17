@@ -241,8 +241,9 @@ export async function main(signal: AbortSignal) {
   // Convert zoom to seconds
   zoomSeconds = zoomToSeconds(zoom)
   offset = 0
-  updateZoomDisplay()
+  // Update slider range first, then display values
   updateZoomSliderRange()
+  updateZoomDisplay()
 
   // Get max height from input, use default if not set
   let maxHeightValue = maxHeightInput.value.trim()
