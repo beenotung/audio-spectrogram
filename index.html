@@ -5,12 +5,41 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Audio Spectrogram</title>
     <style>
+      #canvasContainer {
+        width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+      }
+      #waveformCanvas {
+        display: block;
+        width: 100%;
+        height: 100px;
+        outline: 1px solid blue;
+        cursor: pointer;
+      }
+      #waveformOverlayCanvas {
+        display: block;
+        width: 100%;
+        height: 100px;
+        pointer-events: none;
+      }
       #canvas {
+        display: block;
         width: 100%;
         outline: 1px solid red;
       }
       .field {
         margin: 0.5rem 0;
+      }
+      .controls {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        margin: 0.5rem 0;
+      }
+      .controls button {
+        padding: 0.25rem 0.5rem;
+        cursor: pointer;
       }
       pre {
         font-family: monospace, monospace;
@@ -32,12 +61,54 @@
       <input type="number" id="maxFrequencyInput" min="1" />
     </div>
     <div class="field">
+      <label for="maxHeightInput">Max canvas height (px):</label>
+      <input type="number" id="maxHeightInput" min="100" />
+    </div>
+    <div class="field">
       <label for="fileInput">Audio file:</label>
       <input type="file" id="fileInput" />
     </div>
     <div id="stats"></div>
     <p id="status">Loading script...</p>
-    <canvas id="canvas"></canvas>
+    <div
+      id="cursorInfo"
+      style="margin: 0.5rem 0; font-family: monospace; color: #666"
+    ></div>
+    <div class="controls">
+      <button id="renderSpectrogramBtn">Render Spectrogram</button>
+      <button id="pauseBtn">Pause</button>
+      <button id="resumeBtn" style="display: none;">Resume</button>
+      <label for="zoomInput" style="margin-left: 0.5rem;">Time window (s):</label>
+      <input
+        type="range"
+        id="zoomSlider"
+        min="0.01"
+        max="60"
+        step="0.01"
+        value="1"
+        style="width: 150px;"
+      />
+      <input
+        type="number"
+        id="zoomInput"
+        min="0.01"
+        max="60"
+        step="0.01"
+        value="1"
+        style="width: 80px; margin-left: 0.5rem;"
+      />
+      <button id="zoomOutBtn">Zoom Out</button>
+      <button id="zoomInBtn">Zoom In</button>
+      <button id="panLeftBtn">← Pan Left</button>
+      <button id="panRightBtn">Pan Right →</button>
+    </div>
+    <div id="canvasContainer">
+      <div style="position: relative;">
+        <canvas id="waveformCanvas"></canvas>
+        <canvas id="waveformOverlayCanvas" style="position: absolute; top: 0; left: 0; pointer-events: none;"></canvas>
+      </div>
+      <canvas id="canvas"></canvas>
+    </div>
     <script src="bundle.js"></script>
   </body>
 </html>
